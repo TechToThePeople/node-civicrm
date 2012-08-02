@@ -48,4 +48,20 @@ crmAPI.get = function (entity, params,callback) {
   this.call (entity,'get',params,callback);
 }
 
+crmAPI.create = function (entity, params,callback) {
+  this.call (entity,'create',params,callback);
+}
+crmAPI.create = function (entity, params,callback) {
+  this.call (entity,'create',params,callback);
+}
+
+crmAPI.update = function (entity, params,callback) {
+  // todo, test if params.id is set
+  this.call (entity,'update',params,callback);
+}
+
+crmAPI.delete = function (entity, params,callback) {
+  this.call (entity,'delete',params,callback);
+}
+
 module.exports = crmAPI;
