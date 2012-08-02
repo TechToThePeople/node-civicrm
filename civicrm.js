@@ -1,5 +1,5 @@
 var request = require('request');
-var querystring = require('querystring');
+var qs = require('qs');
 
 /*
 ex:
@@ -20,7 +20,7 @@ crmAPI.init = function (options) {
 };
 
 crmAPI.urlize = function (entity,action) {
-  return this.options.server +this.options.path+ '?' + querystring.stringify ({ 
+  return this.options.server +this.options.path+ '?' + qs.stringify ({ 
     entity: entity,
     action: action,
   });
