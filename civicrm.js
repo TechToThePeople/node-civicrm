@@ -44,4 +44,8 @@ crmAPI.call = function (entity,action,params,callback) {
   });
 };
 
+crmAPI.get = function (entity, params,callback) {
+  this.call (entity,'get',params,callback);
+}
+
 module.exports = crmAPI;
