@@ -51,7 +51,7 @@ $npm install civicrm
       }
     );
 
-### get the first 25 individuals 
+### delete contact id 42
 
     crmAPI = require('civicrm');
     var config = {
@@ -62,11 +62,12 @@ $npm install civicrm
     };
     crmAPI.init (config);
 
-    crmAPI.call ('contact','get',{contact_type:'Individual',return:'display_name,email,phone'},
+    crmAPI.delete ('contact',{id:42},
       function (result) {
-        for (var i in result.values) {
-          val = result.values[i];
-         console.log(val.id +": "+val.display_name+ " "+val.email+ " "+ val.phone);
+        if (result.is_error) {
+           console.log('ERROR '+ result.error_message);
+        } else {
+           console.log('DELETED CONTACT '+ result.id);
         }
       }
     );
