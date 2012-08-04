@@ -39,7 +39,7 @@ crmAPI.call = function (entity,action,params,callback) {
        if (!error && response.statusCode == 200) {
         callback (JSON.parse(body));
        } else {
-         callback ({is_error:1, error_message: 'invalid url'+uri});
+         callback ({is_error:1, error_message: 'invalid url '+response.request.uri.href});
        }
   });
 };
