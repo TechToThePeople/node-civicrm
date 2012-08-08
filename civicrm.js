@@ -75,4 +75,8 @@ p.delete = function (entity, params,callback) {
   this.call (entity,'delete',params,callback);
 }
 
-module.exports = crmAPI;
+var crmFactory = function (options){
+  return new crmAPI(options);
+}
+
+module.exports = crmFactory;
