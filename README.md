@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/TechToThePeople/node-civicrm.png)](http://travis-ci.org/TechToThePeople/node-civicrm)
 ## civicrm
 Allow to fetch data from a civicrm server.
 It covers all the entities civicrm api exposes (more than 80) and the basic crud methods. Yes, it can create, update or delete too.
