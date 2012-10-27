@@ -1,6 +1,6 @@
 var request = require('request');
 var qs = require('qs');
-
+var _ = require("underscore");
 /*
 ex:
 var config = {
@@ -11,7 +11,12 @@ var config = {
 };
 */
 var crmAPI = function civicrm (options) {
-  this.options = options;
+  this.options= {
+    path:'/sites/all/modules/civicrm/extern/rest.php',
+    sequential:1,
+    json:1,
+  };
+  _.extend(this.options,options);
 };
 
 p = crmAPI.prototype;
@@ -24,16 +29,22 @@ p.urlize = function (entity,action) {
 }
 
 p.call = function (entity,action,params,callback) {
-  var post = {};
+  var post = _.clone(this.options);
+  delete post['server'];
+  delete post['path'];
+
   if (typeof(params) === "object") {
-    post = params;
+    if (Object.keys(params).some ( function(key) { //if chained api calls, transform in json
+        return (typeof params[key] == "object");
+      })) {
+        post.json =JSON.stringify(params);
+    } else {
+      _.extend(post,params);
+    }
   } else {
-    post = { id: params }
+    post.id=params;
   }
-  post.sequential= 1;
-  post.json = 1;
-  post.key = this.options.key;
-  post.api_key = this.options.api_key;
+//callback({is_error:1,json:post});return;
   var uri =  this.urlize(entity,action);
   request({
     uri:this.urlize(entity,action),method:'POST',
