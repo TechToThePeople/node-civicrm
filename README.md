@@ -2,7 +2,7 @@
 Allow to fetch data from a civicrm server.
 It covers all the entities civicrm api exposes (more than 80) and the basic crud methods. Yes, it can create, update or delete too.
 
-It's assumed you are familiar with the civicrm api, checkout the [documentation](http://wiki.civicrm.org/confluence/display/CRMDOC42/API+Reference) if you aren't sure.
+It's assumed you are familiar with the civicrm api, checkout the [documentation](http://wiki.civicrm.org/confluence/display/CRMDOC/API+Reference) if you aren't sure.
 
 ## Installation
 $npm install civicrm
