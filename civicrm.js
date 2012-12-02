@@ -47,8 +47,6 @@ p.call = function (entity,action,params,callback) {
   }
 //callback({is_error:1,json:post});return;
   var uri =  this.urlize(entity,action);
-console.log (post);
-console.log(uri);
   request({
     uri:this.urlize(entity,action),method:'POST',
     form: post}
