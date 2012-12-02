@@ -39,7 +39,6 @@ p.call = function (entity,action,params,callback) {
       })) {
         _.extend(post,params);
         post.json =JSON.stringify(post);
-console.log(post.json);
     } else {
       _.extend(post,params);
     }
