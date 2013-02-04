@@ -30,6 +30,8 @@ p.urlize = function (entity,action) {
 
 p.call = function (entity,action,params,callback) {
   var post = _.clone(this.options);
+  delete post['action'];
+  delete post['entity'];
   delete post['server'];
   delete post['path'];
 
@@ -55,6 +57,7 @@ p.call = function (entity,action,params,callback) {
          try {
            callback (JSON.parse(body));
          } catch (e) {
+           console.log("couldn't parse "+ body);
            callback ({is_error:false,error_message:body})
          }
        } else {
