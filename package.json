@@ -1,6 +1,6 @@
 {
   "name": "civicrm",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "main": "civicrm",
   "description": "Access civicrm api (using REST)",
   "keywords": [
