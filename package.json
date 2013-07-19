@@ -1,6 +1,6 @@
 {
   "name": "civicrm",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "main": "civicrm",
   "description": "Access civicrm api (using REST)",
   "keywords": [
@@ -23,6 +23,6 @@
   "dependencies": {
     "request": ">=2.10.0",
     "qs": ">=0.5.0",
-    "underscore":">=1.2.3"
+    "underscore": ">=1.2.3"
   }
 }
