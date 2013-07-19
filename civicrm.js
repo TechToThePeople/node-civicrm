@@ -47,7 +47,6 @@ p.call = function (entity,action,params,callback) {
   } else {
     post.id=params;
   }
-//callback({is_error:1,json:post});return;
   var uri =  this.urlize(entity,action);
   request({
     uri:this.urlize(entity,action),method:'POST',
@@ -58,11 +57,11 @@ p.call = function (entity,action,params,callback) {
            callback (JSON.parse(body));
          } catch (e) {
            console.log("couldn't parse "+ body);
-           callback ({is_error:false,error_message:body})
+           callback ({is_error:1,error_message:"couldn't parse "+body})
          }
        } else {
          console.log(uri);
-         callback ({is_error:1, error_message: 'invalid url '+uri});
+         callback ({is_error:1, error_message: 'invalid url '+uri, error_code:'invalid_url',uri:uri,values:[]});
        }
   });
 };
