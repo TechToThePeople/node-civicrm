@@ -47,9 +47,9 @@ p.call = function (entity,action,params,callback) {
   } else {
     post.id=params;
   }
+console.log(post);
   var uri =  this.urlize(entity,action);
-  request({
-    uri:this.urlize(entity,action),method:'POST',
+  request.post({uri:uri,
     form: post}
     ,function(error, response, body){
        if (!error && response.statusCode == 200) {
