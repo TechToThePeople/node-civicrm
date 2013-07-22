@@ -47,7 +47,6 @@ p.call = function (entity,action,params,callback) {
   } else {
     post.id=params;
   }
-console.log(post);
   var uri =  this.urlize(entity,action);
   request.post({uri:uri,
     form: post}
@@ -56,12 +55,11 @@ console.log(post);
          try {
            callback (JSON.parse(body));
          } catch (e) {
-           console.log("couldn't parse "+ body);
            callback ({is_error:1,error_message:"couldn't parse "+body})
          }
        } else {
-         console.log(uri);
-         callback ({is_error:1, error_message: 'invalid url '+uri, error_code:'invalid_url',uri:uri,values:[]});
+         console.log(uri +" code " + response.statusCode);
+         callback ({is_error:1, status_code:response.statusCode ,error_message: 'invalid url '+uri, error_code:'invalid_url',uri:uri,values:[]});
        }
   });
 };
