@@ -39,8 +39,7 @@ p.call = function (entity,action,params,callback) {
     if (Object.keys(params).some ( function(key) { //if chained api calls, transform in json
         return (typeof params[key] == "object");
       })) {
-        _.extend(post,params);
-        post.json =JSON.stringify(post);
+        post.json =JSON.stringify(params);
     } else {
       _.extend(post,params);
     }
@@ -58,9 +57,23 @@ p.call = function (entity,action,params,callback) {
            callback ({is_error:1,error_message:"couldn't parse "+body})
          }
        } else {
-         console.log(uri +" code " + response.statusCode);
-         callback ({is_error:1, status_code:response.statusCode ,error_message: 'invalid url '+uri, error_code:'invalid_url',uri:uri,values:[]});
-       }
+        if (response.statusCode >= 500 && response.statusCode < 600) { // 50x error, let's retry once
+          request.post({uri:uri,form: post}
+            ,function(error, response, body){
+               if (!error && response.statusCode == 200) {
+                 try {
+                   callback (JSON.parse(body));
+                 } catch (e) {
+                   callback ({is_error:1,error_message:"couldn't parse "+body})
+                 }
+               } else {
+                callback ({is_error:1, http_code:response.statusCode ,error_message: 'http error '+uri, error_code:'http_'+response.statusCode,uri:uri,values:[]});
+               }
+            });
+        } else {
+          callback ({is_error:1, http_code:response.statusCode ,error_message: 'http error '+uri, error_code:'http_'+response.statusCode,uri:uri,values:[]});
+        }
+      }
   });
 };
 
