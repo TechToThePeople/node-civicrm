@@ -16,12 +16,11 @@ var crmAPI = function civicrm (options) {
     path:'/sites/all/modules/civicrm/extern/rest.php',
     sequential:1,
     json:1,
-    concurrency:5, // run max 5 requests in parallel
+    concurrency:8, // max number of queries to run in parallel
   };
   _.extend(this.options,options);
 
   this.queue = async.queue(function(query,callback) {
-    console.log("call api."+query.entity + "." + query.action );
     p.directcall.call (query.this,query.entity,query.action,query.params,function(r){
       callback();
       query.callback(r);
