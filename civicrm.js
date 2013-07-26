@@ -1,6 +1,7 @@
 var request = require('request');
 var qs = require('qs');
 var _ = require("underscore");
+var async = require('async');
 /*
 ex:
 var config = {
@@ -15,8 +16,36 @@ var crmAPI = function civicrm (options) {
     path:'/sites/all/modules/civicrm/extern/rest.php',
     sequential:1,
     json:1,
+    concurrency:5, // run max 5 requests in parallel
   };
   _.extend(this.options,options);
+
+  this.queue = async.queue(function(query,callback) {
+    console.log("call api."+query.entity + "." + query.action );
+    p.directcall.call (query.this,query.entity,query.action,query.params,function(r){
+      callback();
+      query.callback(r);
+    });
+//function (data) {callback(data)});
+  //process.nextTick();
+ /* 
+    if (r.is_error) {
+      if (r.sql && r.sql.indexOf("nativecode=1213") !== -1) {
+        console.log("deadlock, retry");
+       this.call (query.entity,query.action,query.params,function(r){callback();query.callback(r)});
+       });
+      } else {
+        callback();
+      }
+    } else {
+      callback();
+    }
+  });
+*/
+  }, this.options.concurrency);
+
+
+
 };
 
 p = crmAPI.prototype;
@@ -28,7 +57,7 @@ p.urlize = function (entity,action) {
   });
 }
 
-p.call = function (entity,action,params,callback) {
+p.directcall = function (entity,action,params,callback) {
   var post = _.clone(this.options);
   delete post['action'];
   delete post['entity'];
@@ -77,9 +106,11 @@ p.call = function (entity,action,params,callback) {
   });
 };
 
-//TODO add an error first param ? + option to throw it
-//
+p.call = function (entity,action,params,callback) {
+  this.queue.push({this:this,entity:entity, action:action,params:params,callback:callback});
+}
 p.get = function (entity, params,callback) {
+//  this.queue.push({entity:entity, action:"get",params:params,callback:callback});
   this.call (entity,'get',params,callback);
 }
 
