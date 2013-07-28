@@ -62,6 +62,7 @@ p.directcall = function (entity,action,params,callback) {
   delete post['entity'];
   delete post['server'];
   delete post['path'];
+  delete post['concurrency'];
 
   if (typeof(params) === "object") {
     if (Object.keys(params).some ( function(key) { //if chained api calls, transform in json
@@ -75,15 +76,20 @@ p.directcall = function (entity,action,params,callback) {
     post.id=params;
   }
   var uri =  this.urlize(entity,action);
+       var t = {};
   request.post({uri:uri,
     form: post}
     ,function(error, response, body){
        if (!error && response.statusCode == 200) {
          try {
-           callback (JSON.parse(body));
+           t = JSON.parse(body);
          } catch (e) {
-           callback ({is_error:1,error_message:"couldn't parse "+body})
-         }
+           t = {is_error:1,error_message:"couldn't parse "+body};
+//           callback ({is_error:1,error_message:"couldn't parse "+body});
+           return;
+         } finally {
+           callback (t);
+       }
        } else {
         if (response.statusCode >= 500 && response.statusCode < 600) { // 50x error, let's retry once
           request.post({uri:uri,form: post}
@@ -92,10 +98,10 @@ p.directcall = function (entity,action,params,callback) {
                  try {
                    callback (JSON.parse(body));
                  } catch (e) {
-                   callback ({is_error:1,error_message:"couldn't parse "+body})
+                   callback ({is_error:1,error_message:"couldn't parse "+body});return;
                  }
                } else {
-                callback ({is_error:1, http_code:response.statusCode ,error_message: 'http error '+uri, error_code:'http_'+response.statusCode,uri:uri,values:[]});
+                callback ({is_error:1, http_code:response.statusCode ,error_message: 'http error '+uri, error_code:'http_'+response.statusCode,uri:uri,values:[]});return;
                }
             });
         } else {
