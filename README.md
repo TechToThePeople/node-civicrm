@@ -4,6 +4,10 @@ It covers all the entities civicrm api exposes (more than 80) and the basic crud
 
 It's assumed you are familiar with the civicrm api, checkout the [documentation](http://wiki.civicrm.org/confluence/display/CRMDOC/API+Reference) if you aren't sure.
 
+To avoid running too many queries at the same time and flood the civicrm server, it has a build in queue that doesn't send more than 8 requests in parallel.
+
+you can adjust that by setting config.concurrency = 8;
+
 ## Installation
 $npm install civicrm
 
@@ -12,14 +16,13 @@ $npm install civicrm
 
 ### get the first 25 individuals 
 
-    crmAPI = require('civicrm');
     var config = {
       server:'http://example.org',
       path:'/sites/all/modules/civicrm/extern/rest.php',
       key:'your key from settings.civicrm.php',
       api_key:'the user key'
     };
-    crmAPI.init (config);
+    var crmAPI = require('civicrm')(config);
 
     crmAPI.get ('contact',{contact_type:'Individual',return:'display_name,email,phone'},
       function (result) {
@@ -32,15 +35,6 @@ $npm install civicrm
 
 ### create a new contact
 
-    crmAPI = require('civicrm');
-    var config = {
-      server:'http://example.org',
-      path:'/sites/all/modules/civicrm/extern/rest.php',
-      key:'your key from settings.civicrm.php',
-      api_key:'the user key'
-    };
-    crmAPI.init (config);
-
     crmAPI.create ('contact',{contact_type:'Individual','first_name':'John','last_name':'Doe'},
       function (result) {
         if (result.is_error) {
@@ -52,15 +46,6 @@ $npm install civicrm
     );
 
 ### delete contact id 42
-
-    crmAPI = require('civicrm');
-    var config = {
-      server:'http://example.org',
-      path:'/sites/all/modules/civicrm/extern/rest.php',
-      key:'your key from settings.civicrm.php',
-      api_key:'the user key'
-    };
-    crmAPI.init (config);
 
     crmAPI.delete ('contact',{id:42},
       function (result) {
