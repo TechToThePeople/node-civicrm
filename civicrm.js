@@ -16,6 +16,7 @@ var crmAPI = function civicrm (options) {
     path:'/sites/all/modules/civicrm/extern/rest.php',
     sequential:1,
     json:1,
+    debug:false,
     concurrency:8, // max number of queries to run in parallel
   };
   _.extend(this.options,options);
@@ -56,6 +57,10 @@ p.urlize = function (entity,action) {
   });
 }
 
+p.debug = function (enable) {
+  this.options.debug = enable || true;
+}
+
 p.directcall = function (entity,action,params,callback) {
   var post = _.clone(this.options);
   delete post['action'];
@@ -76,10 +81,15 @@ p.directcall = function (entity,action,params,callback) {
     post.id=params;
   }
   var uri =  this.urlize(entity,action);
-       var t = {};
+  var t = {};
+  var debug = this.options.debug;
+  if (debug)
+    console.log ("->api."+entity+"."+action+" "+JSON.stringify(params));
   request.post({uri:uri,
     form: post}
     ,function(error, response, body){
+       if (debug)
+         console.log (" <-"+response.statusCode +" api."+entity+"."+action+" "+JSON.stringify(params));
        if (!error && response.statusCode == 200) {
          try {
            t = JSON.parse(body);
