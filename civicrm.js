@@ -88,6 +88,11 @@ p.directcall = function (entity,action,params,callback) {
   request.post({uri:uri,
     form: post}
     ,function(error, response, body){
+       if (error){
+        t = {is_error:1,error_message:error};
+         callback (t);
+         return;
+       }
        if (debug)
          console.log (" <-"+response.statusCode +" api."+entity+"."+action+" "+JSON.stringify(params));
        if (!error && response.statusCode == 200) {
@@ -113,17 +118,22 @@ p.directcall = function (entity,action,params,callback) {
                } else {
                 callback ({is_error:1, http_code:response.statusCode ,error_message: 'http error '+uri, error_code:'http_'+response.statusCode,uri:uri,values:[]});return;
                }
-            });
+            })
+          .on('error', function(err) {
+             t = {is_error:1,error_message:error};
+             callback (t);
+          });
         } else {
           callback ({is_error:1, http_code:response.statusCode ,error_message: 'http error '+uri, error_code:'http_'+response.statusCode,uri:uri,values:[]});
         }
       }
-  });
+    })
 };
 
 p.call = function (entity,action,params,callback) {
   this.queue.push({this:this,entity:entity, action:action,params:params,callback:callback});
 }
+
 p.get = function (entity, params,callback) {
 //  this.queue.push({entity:entity, action:"get",params:params,callback:callback});
   this.call (entity,'get',params,callback);
@@ -145,6 +155,31 @@ p.update = function (entity, params,callback) {
 p.delete = function (entity, params,callback) {
   this.call (entity,'delete',params,callback);
 }
+
+p.callSync = function (entity, action,params,callback) {
+  var that = this;
+  async.series([
+    function(cb){
+       that.directcall (entity,action,params,function (d) {
+          cb(null,d);
+       });
+    }],
+    function(err, results){
+      callback (results[0]);
+    }
+  );
+}
+
+p.getSync = function (entity, params,callback) {
+//  this.queue.push({entity:entity, action:"get",params:params,callback:callback});
+  this.callSync (entity,'get',params,callback);
+}
+
+p.getSingleSync = function (entity, params,callback) {
+  this.callSync (entity,'getsingle',params,callback);
+}
+
+
 
 var crmFactory = function (options){
   return new crmAPI(options);
