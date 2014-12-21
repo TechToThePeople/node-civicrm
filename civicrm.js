@@ -143,6 +143,10 @@ p.getSingle = function (entity, params,callback) {
   this.call (entity,'getsingle',params,callback);
 }
 
+p.getQuick = function (entity, params,callback) {
+  this.call (entity,'getquick',params,callback);
+}
+
 p.create = function (entity, params,callback) {
   this.call (entity,'create',params,callback);
 }
@@ -155,31 +159,6 @@ p.update = function (entity, params,callback) {
 p.delete = function (entity, params,callback) {
   this.call (entity,'delete',params,callback);
 }
-
-p.callSync = function (entity, action,params,callback) {
-  var that = this;
-  async.series([
-    function(cb){
-       that.directcall (entity,action,params,function (d) {
-          cb(null,d);
-       });
-    }],
-    function(err, results){
-      callback (results[0]);
-    }
-  );
-}
-
-p.getSync = function (entity, params,callback) {
-//  this.queue.push({entity:entity, action:"get",params:params,callback:callback});
-  this.callSync (entity,'get',params,callback);
-}
-
-p.getSingleSync = function (entity, params,callback) {
-  this.callSync (entity,'getsingle',params,callback);
-}
-
-
 
 var crmFactory = function (options){
   return new crmAPI(options);

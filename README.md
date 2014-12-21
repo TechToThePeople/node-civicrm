@@ -70,4 +70,7 @@ For instance the get above can also be called:
         }
       }
     );
+## Synchronous calls
+Sometimes, it's just easier to wait until the data is fetched from the server.
 
+   crmAPI.getSync 
