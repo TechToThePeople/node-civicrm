@@ -74,3 +74,10 @@ For instance the get above can also be called:
 Sometimes, it's just easier to wait until the data is fetched from the server.
 
    crmAPI.getSync 
+   
+#Other node libraries
+
+If you want to interract with a local crm, Tim Otten's civicrm-cv https://github.com/civicrm/cv-nodejs is a wrapper for interacting with a local CiviCRM instance (in the current folder). You may call cv sub-commands such as api, url, vars:show, or php:eval.
+
+It aims to be a shim enabling grunt, gulp, protractor or other node-based CLI tools to manipulate the local Civi site (without any extra configuration or hard-coded paths).
+
