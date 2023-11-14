@@ -1,7 +1,8 @@
-var request = require('request');
-var qs = require('qs');
+const axios = require("axios");
+var request = require("request");
+var qs = require("qs");
 var _ = require("underscore");
-var async = require('async');
+var async = require("async");
 /*
 ex:
 var config = {
@@ -11,157 +12,94 @@ var config = {
   api_key:'the user key'
 };
 */
-var crmAPI = function civicrm (options) {
-  this.options= {
-    path:'/sites/all/modules/civicrm/extern/rest.php',
-    sequential:1,
-    json:1,
-    debug:false,
-    concurrency:8, // max number of queries to run in parallel
-  };
-  _.extend(this.options,options);
+class crmAPI {
+  constructor(options) {
+    this.options = {
+      path: "/civicrm/rest/api4",
+      sequential: 1,
+      json: 1,
+      debug: false,
+      ...options,
+    };
 
-  this.queue = async.queue(function(query,callback) {
-    p.directcall.call (query.this,query.entity,query.action,query.params,function(r){
-      callback();
-      query.callback(r);
-    });
-//function (data) {callback(data)});
-  //process.nextTick();
- /* 
-    if (r.is_error) {
-      if (r.sql && r.sql.indexOf("nativecode=1213") !== -1) {
-        console.log("deadlock, retry");
-       this.call (query.entity,query.action,query.params,function(r){callback();query.callback(r)});
-       });
-      } else {
-        callback();
-      }
-    } else {
-      callback();
-    }
-  });
-*/
-  }, this.options.concurrency);
-
-
-
-};
-
-p = crmAPI.prototype;
-
-p.urlize = function (entity,action) {
-  return this.options.server +this.options.path+ '?' + qs.stringify ({ 
-    entity: entity,
-    action: action,
-  });
-}
-
-p.debug = function (enable) {
-  this.options.debug = enable || true;
-}
-
-p.directcall = function (entity,action,params,callback) {
-  var post = _.clone(this.options);
-  delete post['action'];
-  delete post['entity'];
-  delete post['server'];
-  delete post['path'];
-  delete post['concurrency'];
-
-  if (typeof(params) === "object") {
-    if (Object.keys(params).some ( function(key) { //if chained api calls, transform in json
-        return (typeof params[key] == "object");
-      })) {
-        post.json =JSON.stringify(params);
-    } else {
-      _.extend(post,params);
-    }
-  } else {
-    post.id=params;
+    this.headers = {
+      "Content-Type": "application/json;charset=UTF-8",
+      "X-Requested-With": "XMLHttpRequest",
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-Civi-Auth": "Bearer " + this.options.api_key,
+      Authorization: "Bearer " + this.options.api_key,
+    };
+    if (options.key) this.headers["X-Civi-Key"] = options.key;
   }
-  var uri =  this.urlize(entity,action);
-  var t = {};
-  var debug = this.options.debug;
-  if (debug)
-    console.log ("->api."+entity+"."+action+" "+JSON.stringify(params));
-  request.post({uri:uri,
-    form: post}
-    ,function(error, response, body){
-       if (error){
-        t = {is_error:1,error_message:error};
-         callback (t);
-         return;
-       }
-       if (debug)
-         console.log (" <-"+response.statusCode +" api."+entity+"."+action+" "+JSON.stringify(params));
-       if (!error && response.statusCode == 200) {
-         try {
-           t = JSON.parse(body);
-         } catch (e) {
-           t = {is_error:1,error_message:"couldn't parse "+body};
-//           callback ({is_error:1,error_message:"couldn't parse "+body});
-           return;
-         } finally {
-           callback (t);
-       }
-       } else {
-        if (response.statusCode >= 500 && response.statusCode < 600) { // 50x error, let's retry once
-          request.post({uri:uri,form: post}
-            ,function(error, response, body){
-               if (!error && response.statusCode == 200) {
-                 try {
-                   callback (JSON.parse(body));
-                 } catch (e) {
-                   callback ({is_error:1,error_message:"couldn't parse "+body});return;
-                 }
-               } else {
-                callback ({is_error:1, http_code:response.statusCode ,error_message: 'http error '+uri, error_code:'http_'+response.statusCode,uri:uri,values:[]});return;
-               }
-            })
-          .on('error', function(err) {
-             t = {is_error:1,error_message:error};
-             callback (t);
-          });
-        } else {
-          callback ({is_error:1, http_code:response.statusCode ,error_message: 'http error '+uri, error_code:'http_'+response.statusCode,uri:uri,values:[]});
-        }
-      }
-    })
-};
 
-p.call = function (entity,action,params,callback) {
-  this.queue.push({this:this,entity:entity, action:action,params:params,callback:callback});
+  urlize = function (entity, action) {
+    return (
+      this.options.server + this.options.path + "/" + entity + "/" + action
+    );
+    const separator = this.options.server.includes("?") ? "&" : "?";
+    return (
+      this.options.server +
+      this.options.path +
+      separator +
+      qs.stringify({
+        entity: entity,
+        action: action,
+      })
+    );
+  };
+
+  debug = function (enable) {
+    this.options.debug = enable || true;
+  };
+
+  call = async (entity, action, params) => {
+    let axiosConfig = {
+      headers: this.headers,
+    };
+
+    const uri = this.urlize(entity, action);
+    if (this.options.debug)
+      console.log(
+        "->api." + entity + "." + action, params
+      );
+    const r = await axios.post(uri, { params: JSON.stringify(params) }, axiosConfig);
+
+    if (!r.data) {
+      throw new Error(r);
+    }
+    return r.data;
+  };
+
+  get = async (entity, params) => {
+    //  this.queue.push({entity:entity, action:"get",params:params,callback:callback});
+console.log(params);
+    return this.call(entity, "get", params);
+  };
+
+  getSingle = async (entity, params) => {
+    return this.call(entity, "getsingle", params, callback);
+  };
+
+  getQuick = function (entity, params, callback) {
+    this.call(entity, "getquick", params, callback);
+  };
+
+  create = function (entity, params, callback) {
+    this.call(entity, "create", params, callback);
+  };
+
+  update = function (entity, params, callback) {
+    // todo, test if params.id is set
+    this.call(entity, "create", params, callback);
+  };
+
+  delete = function (entity, params, callback) {
+    this.call(entity, "delete", params, callback);
+  };
 }
 
-p.get = function (entity, params,callback) {
-//  this.queue.push({entity:entity, action:"get",params:params,callback:callback});
-  this.call (entity,'get',params,callback);
-}
-
-p.getSingle = function (entity, params,callback) {
-  this.call (entity,'getsingle',params,callback);
-}
-
-p.getQuick = function (entity, params,callback) {
-  this.call (entity,'getquick',params,callback);
-}
-
-p.create = function (entity, params,callback) {
-  this.call (entity,'create',params,callback);
-}
-
-p.update = function (entity, params,callback) {
-  // todo, test if params.id is set
-  this.call (entity,'create',params,callback);
-}
-
-p.delete = function (entity, params,callback) {
-  this.call (entity,'delete',params,callback);
-}
-
-var crmFactory = function (options){
+var crmFactory = function (options) {
   return new crmAPI(options);
-}
+};
 
 module.exports = crmFactory;
