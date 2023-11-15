@@ -61,11 +61,11 @@ class crmAPI {
     };
 
     const uri = this.urlize(entity, action);
-    if (this.options.debug) console.log("->api." + entity + "." + action, uri);
+    if (this.options.debug) console.log("->api." + entity + "." + action, uri, index);
     console.dir(params, { depth: null });
     const r = await axios.post(
       uri,
-      { params: JSON.stringify(params), index: index || '' },
+      { params: JSON.stringify(params), index: index },
       axiosConfig
     );
 
@@ -79,17 +79,17 @@ class crmAPI {
     return this.api4(entity, "get", params, index);
   };
 
-  create = async (entity, params) => {
-    return this.api4(entity, "create", params);
+  create = async (entity, params, index) => {
+    return this.api4(entity, "create", params, index || 0);
   };
 
-  update = async (entity, params) => {
+  update = async (entity, params, index) => {
     // todo, test if params.id is set
-    return this.api4(entity, "update", params);
+    return this.api4(entity, "update", params, index || 0);
   };
 
-  delete = async (entity, params) => {
-    return this.api4(entity, "delete", params);
+  delete = async (entity, params, index) => {
+    return this.api4(entity, "delete", params, index || 0);
   };
 }
 
