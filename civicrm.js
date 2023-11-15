@@ -1,14 +1,10 @@
 const axios = require("axios");
-var request = require("request");
-var qs = require("qs");
-var _ = require("underscore");
-var async = require("async");
-/*
-ex:
+//const qs = require('querystring');
+/*ex:
 var config = {
   server:'http://example.org',
-  path:'/sites/all/modules/civicrm/extern/rest.php',
-  key:'your key from settings.civicrm.php',
+  path:'/civicrm/ajax/rest/api4', (optional, default)
+  key:'your key from settings.civicrm.php',(optional)
   api_key:'the user key'
 };
 */
@@ -30,12 +26,18 @@ class crmAPI {
       Authorization: "Bearer " + this.options.api_key,
     };
     if (options.key) this.headers["X-Civi-Key"] = options.key;
+
+    if (!this.options.server) {
+      console.error("missing config.server in the initialization of civicrm API (should be the url of your civi install)");
+    }
   }
 
   urlize = function (entity, action) {
     return (
       this.options.server + this.options.path + "/" + entity + "/" + action
     );
+
+/* api v3?
     const separator = this.options.server.includes("?") ? "&" : "?";
     return (
       this.options.server +
@@ -46,23 +48,26 @@ class crmAPI {
         action: action,
       })
     );
+*/
   };
 
   debug = function (enable) {
     this.options.debug = enable || true;
   };
 
-  call = async (entity, action, params) => {
+  api4 = async (entity, action, params, index) => {
     let axiosConfig = {
       headers: this.headers,
     };
 
     const uri = this.urlize(entity, action);
-    if (this.options.debug)
-      console.log(
-        "->api." + entity + "." + action, params
-      );
-    const r = await axios.post(uri, { params: JSON.stringify(params) }, axiosConfig);
+    if (this.options.debug) console.log("->api." + entity + "." + action, uri);
+    console.dir(params, { depth: null });
+    const r = await axios.post(
+      uri,
+      { params: JSON.stringify(params), index: index || '' },
+      axiosConfig
+    );
 
     if (!r.data) {
       throw new Error(r);
@@ -70,31 +75,21 @@ class crmAPI {
     return r.data;
   };
 
-  get = async (entity, params) => {
-    //  this.queue.push({entity:entity, action:"get",params:params,callback:callback});
-console.log(params);
-    return this.call(entity, "get", params);
+  get = async (entity, params, index) => {
+    return this.api4(entity, "get", params, index);
   };
 
-  getSingle = async (entity, params) => {
-    return this.call(entity, "getsingle", params, callback);
+  create = async (entity, params) => {
+    return this.api4(entity, "create", params);
   };
 
-  getQuick = function (entity, params, callback) {
-    this.call(entity, "getquick", params, callback);
-  };
-
-  create = function (entity, params, callback) {
-    this.call(entity, "create", params, callback);
-  };
-
-  update = function (entity, params, callback) {
+  update = async (entity, params) => {
     // todo, test if params.id is set
-    this.call(entity, "create", params, callback);
+    return this.api4(entity, "update", params);
   };
 
-  delete = function (entity, params, callback) {
-    this.call(entity, "delete", params, callback);
+  delete = async (entity, params) => {
+    return this.api4(entity, "delete", params);
   };
 }
 

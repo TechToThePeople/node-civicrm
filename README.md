@@ -1,83 +1,87 @@
 ## civicrm
 Allow to fetch data from a civicrm server.
-It covers all the entities civicrm api exposes (more than 80) and the basic crud methods. Yes, it can create, update or delete too.
+It covers all the entities civicrm api4 exposes and the basic crud methods. Yes, it can create, update or delete too. Yes, it can chain api calls, the whole magic.
 
-It's assumed you are familiar with the civicrm api, checkout the [documentation](http://wiki.civicrm.org/confluence/display/CRMDOC/API+Reference) if you aren't sure.
+It's assumed you are familiar with the civicrm api, checkout the [documentation](https://docs.civicrm.org/dev/en/latest/api/) if you aren't sure.
 
-To avoid running too many queries at the same time and flood the civicrm server, it has a build in queue that doesn't send more than 8 requests in parallel.
-
-you can adjust that by setting config.concurrency = 8;
 
 ## Installation
+
 $npm install civicrm
 
 ## Examples
 
 
-### get the first 25 individuals 
+### get the first 25 contacts
 
-    var config = {
+    const config = {
       server:'http://example.org',
-      path:'/sites/all/modules/civicrm/extern/rest.php',
-      key:'your key from settings.civicrm.php',
+      //path: if not under /civicrm/ajax/rest/api4
+      //key:'your key from settings.civicrm.php', mostly not needed
       api_key:'the user key'
     };
-    var crmAPI = require('civicrm')(config);
+    const crmAPI = require('civicrm')(config);
 
-    crmAPI.get ('contact',{contact_type:'Individual',return:'display_name,email,phone'},
-      function (result) {
-        for (var i in result.values) {
-          val = result.values[i];
-         console.log(val.id +": "+val.display_name+ " "+val.email+ " "+ val.phone);
-        }
-      }
+    const results = await this.crmAPI.get("Contact", {
+      select: [
+        "first_name",
+        "last_name",
+        "display_name",
+        "phone_primary.phone",
+        "email_primary.email",
+        "address_primary.country_id:abbr",
+        "address_primary.postal_code",
+        "address_primary.city",
+        "address_primary.street_address",
+      ],
+      limit: 25,
+    });
+    results.values.forEach ( (val: any) =>
+      console.log(val.id +": "+val.display_name+ " "+val['email_primary.email']+ " "+ val["phone.primary.phone"])
     );
+
 
 ### create a new contact
 
-    crmAPI.create ('contact',{contact_type:'Individual','first_name':'John','last_name':'Doe'},
-      function (result) {
-        if (result.is_error) {
-           console.log('ERROR '+ result.error_message);
-        } else {
-           console.log('CREATED CONTACT '+ result.id);
-        }
-      }
-    );
+    const r = await crmAPI.create ('Contact',{
+      values: {
+        first_name: contact.firstName,
+        last_name: contact.lastName || null,
+        //external_identifier: contact.contactRef, // creates problems if the contact exists in trash
+        source: source,
+      }});
+    console.log(r);
 
 ### delete contact id 42
 
-    crmAPI.delete ('contact',{id:42},
-      function (result) {
-        if (result.is_error) {
-           console.log('ERROR '+ result.error_message);
-        } else {
-           console.log('DELETED CONTACT '+ result.id);
-        }
-      }
+    const result = await crmAPI.delete ('contact',{where: [["id", "=", 42]]}),
+    if (result.is_error) {
+      console.log('ERROR '+ result.error_message);
+    } else {
+      console.log('DELETED CONTACT '+ result.id);
+    }
     );
 
 
-### lower access 
-All the above actions relies on the lower level call method. You can call it directly if there is another action you need.
+## underlying api
+
+All the above actions relies on the lower level API4 method. You can call it directly if there is another action you need.
 For instance the get above can also be called:
 
-    crmAPI.call ('contact','get',{contact_type:'Individual',return:'display_name,email,phone'},
-      function (result) {
-        for (var i in result.values) {
-          val = result.values[i];
-         console.log(val.id +": "+val.display_name+ " "+val.email+ " "+ val.phone);
-        }
-      }
+    const result = await crmAPI.api4 ('Contact','get',{...});
+
+all the features of API4 are available, including the 4th parameter "index", for instance to format the list of countris as a map with the iso code being the key and the id the value:
+
+    const countries = await this.crmAPI.get(
+      "Country",
+      {
+        select: ["id", "iso_code", "row_count"],
+        limit: 9999,
+      },
+      { iso_code: "id" }
     );
-## Synchronous calls
-Sometimes, it's just easier to wait until the data is fetched from the server.
 
-   crmAPI.getSync 
-   
-#Other node libraries
 
-If you want to interract with a local crm, Tim Otten's civicrm-cv https://github.com/civicrm/cv-nodejs is a wrapper for interacting with a local CiviCRM instance (in the current folder). You may call cv sub-commands such as api, url, vars:show, or php:eval.
+## access legacy api3
 
-It aims to be a shim enabling grunt, gulp, protractor or other node-based CLI tools to manipulate the local Civi site (without any extra configuration or hard-coded paths).
-
+PR welcome!
