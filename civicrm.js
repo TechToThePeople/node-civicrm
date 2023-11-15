@@ -62,7 +62,6 @@ class crmAPI {
 
     const uri = this.urlize(entity, action);
     if (this.options.debug) console.log("->api." + entity + "." + action, uri, index);
-    console.dir(params, { depth: null });
     const r = await axios.post(
       uri,
       { params: JSON.stringify(params), index: index },
