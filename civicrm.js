@@ -1,5 +1,5 @@
 const axios = require("axios");
-//const qs = require('querystring');
+const qs = require('querystring');
 /*ex:
 var config = {
   server:'http://example.org',
@@ -11,7 +11,7 @@ var config = {
 class crmAPI {
   constructor(options) {
     this.options = {
-      path: "/civicrm/rest/api4",
+      path: "/civicrm/ajax/api4",
       sequential: 1,
       json: 1,
       debug: false,
@@ -61,15 +61,28 @@ class crmAPI {
     };
 
     const uri = this.urlize(entity, action);
-    if (this.options.debug) console.log("->api." + entity + "." + action, uri, index);
+    if (this.options.debug) {console.log("->api." + entity + "." + action, uri, index ? index : null,JSON.stringify(params))};
+    let b = {params:JSON.stringify(params)}
+    if (typeof index !== undefined) {
+      if (typeof index === 'object') {
+         Object.keys(index).forEach ( d => b [ 'index[' +d+']'] = index [d])  
+         
+      } else {
+         b.index = index
+      }
+    }
+    let body = qs.stringify (b);
     const r = await axios.post(
       uri,
-      { params: JSON.stringify(params), index: index },
+      body,
       axiosConfig
     );
 
     if (!r.data) {
       throw new Error(r);
+    }
+    if (typeof r.data !=='object') {
+      throw new Error ("the server didn't return a json, correct url for api endpoint? check your config.server + config.path " + uri);
     }
     return r.data;
   };
