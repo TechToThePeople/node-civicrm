@@ -1,5 +1,3 @@
-const axios = require("axios");
-const qs = require('querystring');
 /*ex:
 var config = {
   server:'http://example.org',
@@ -19,7 +17,7 @@ class crmAPI {
     };
 
     this.headers = {
-      "Content-Type": "application/json;charset=UTF-8",
+//      "Content-Type": "application/json;charset=UTF-8",
       "X-Requested-With": "XMLHttpRequest",
       "Content-Type": "application/x-www-form-urlencoded",
       "X-Civi-Auth": "Bearer " + this.options.api_key,
@@ -28,7 +26,9 @@ class crmAPI {
     if (options.key) this.headers["X-Civi-Key"] = options.key;
 
     if (!this.options.server) {
-      console.error("missing config.server in the initialization of civicrm API (should be the url of your civi install)");
+      console.error(
+        "missing config.server in the initialization of civicrm API (should be the url of your civi install)"
+      );
     }
   }
 
@@ -37,7 +37,7 @@ class crmAPI {
       this.options.server + this.options.path + "/" + entity + "/" + action
     );
 
-/* api v3?
+    /* api v3?
     const separator = this.options.server.includes("?") ? "&" : "?";
     return (
       this.options.server +
@@ -56,35 +56,37 @@ class crmAPI {
   };
 
   api4 = async (entity, action, params, index) => {
-    let axiosConfig = {
-      headers: this.headers,
-    };
-
     const uri = this.urlize(entity, action);
-    if (this.options.debug) {console.log("->api." + entity + "." + action, uri, index ? index : null,JSON.stringify(params))};
-    let b = {params:JSON.stringify(params)}
+    if (this.options.debug) {
+      console.log(
+        "->api." + entity + "." + action,
+        uri,
+        index ? index : null,
+        JSON.stringify(params)
+      );
+    }
+    let b = { params: JSON.stringify(params) };
     if (typeof index !== undefined) {
-      if (typeof index === 'object') {
-         Object.keys(index).forEach ( d => b [ 'index[' +d+']'] = index [d])  
-         
+      if (typeof index === "object") {
+        Object.keys(index).forEach((d) => (b["index[" + d + "]"] = index[d]));
       } else {
-         b.index = index
+        if (index) b.index = index;
       }
     }
-    let body = qs.stringify (b);
-    const r = await axios.post(
-      uri,
-      body,
-      axiosConfig
-    );
+    let body = new URLSearchParams(b).toString();
 
-    if (!r.data) {
-      throw new Error(r);
+    const response = await fetch(uri, {
+      method: "POST",
+      headers: this.headers,
+      body: body,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    if (typeof r.data !=='object') {
-      throw new Error ("the server didn't return a json, correct url for api endpoint? check your config.server + config.path " + uri);
-    }
-    return r.data;
+
+    const responseData = await response.json();
+    return responseData;
   };
 
   get = async (entity, params, index) => {
