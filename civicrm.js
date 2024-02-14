@@ -16,13 +16,19 @@ class crmAPI {
       ...options,
     };
 
+    if (!this.options.api_key) {
+      throw new Error ("civicrm missing api_key")
+    }
+
     this.headers = {
-//      "Content-Type": "application/json;charset=UTF-8",
+      //      "Content-Type": "application/json;charset=UTF-8",
       "X-Requested-With": "XMLHttpRequest",
       "Content-Type": "application/x-www-form-urlencoded",
       "X-Civi-Auth": "Bearer " + this.options.api_key,
       Authorization: "Bearer " + this.options.api_key,
     };
+
+
     if (options.key) this.headers["X-Civi-Key"] = options.key;
 
     if (!this.options.server) {
@@ -58,6 +64,7 @@ class crmAPI {
   api4 = async (entity, action, params, index) => {
     const uri = this.urlize(entity, action);
     if (this.options.debug) {
+      params.debug=true;
       console.log(
         "->api." + entity + "." + action,
         uri,
@@ -75,11 +82,18 @@ class crmAPI {
     }
     let body = new URLSearchParams(b).toString();
 
+console.log("headers",this.headers);
+
     const response = await fetch(uri, {
       method: "POST",
+      redirect: "manual",
       headers: this.headers,
       body: body,
     });
+
+    if (response.status === 301) {
+      throw new Error(`HTTP redirect! use ${response.url} instead`);
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
