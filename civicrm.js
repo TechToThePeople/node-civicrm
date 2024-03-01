@@ -82,7 +82,7 @@ class crmAPI {
     }
     let body = new URLSearchParams(b).toString();
 
-console.log("headers",this.headers);
+    if (this.options.debug) console.log("headers",this.headers);
 
     const response = await fetch(uri, {
       method: "POST",
